@@ -575,7 +575,7 @@ def format_text_for_mail(text):
     elif sys.version_info[0] == 2: # Python 2
         return text.encode("utf-8","ignore")
     else:
-        print("Don't know what version of python is this is")
+        print("Don't know what version of python this is")
         exit(33)
 
 
@@ -641,10 +641,9 @@ def generate_and_send_emails(send_emails, subject, template, projects):
             continue
         project_email_address_list = projects[project]["emails"]
         projmail_str = format_text_for_mail(projmail)
-        message_bcc = format_text_for_mail("Mail sent to: " + ",".join(project_email_address_list) + "\n------\n\n" + projmail)
         write_copy_of_email_to_file(project_name, project_email_address_list, subject, projmail_str)
 
-        if send_emails and len(project_email_address_list) > 0:
+        if send_emails:
             if ask_for_verification:
                 askToContinue('Are you sure that you want to send the emails?', 'Yes I am sure')
                 ask_for_verification = False
@@ -655,7 +654,8 @@ def generate_and_send_emails(send_emails, subject, template, projects):
             if MAIL_BCC:
                 print ("Really sending BCC emails to: %s" % MAIL_BCC)
                 bcc_subject =  subject + " - " + project_name
-                send_mails_to_list_of_emails(smtpconn, bcc_subject, MAIL_BCC.split(","), projmail_str)
+                bcc_message = format_text_for_mail("Mail sent to: " + ",".join(project_email_address_list) + "\n------\n\n" + projmail)
+                send_mails_to_list_of_emails(smtpconn, bcc_subject, MAIL_BCC.split(","), bcc_message)
 
         elif notified_admin == False:
             print("Attention!!! Not sending emails right now. Please, check the created files and when you are sure execute this same command with '--I-am-sure-that-I-want-to-send-emails' parameter.")
