@@ -579,7 +579,7 @@ def format_text_for_mail(text):
         exit(33)
 
 
-def send_mail_to_list_of_emails(smtpclient, subject, email_address_list, mail_str):
+def send_mails_to_list_of_emails(smtpclient, subject, email_address_list, mail_str):
     for email_address in email_address_list:
         msg = MIMEText(mail_str)
         msg["Subject"] = subject
