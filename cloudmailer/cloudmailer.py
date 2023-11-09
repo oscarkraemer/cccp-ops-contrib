@@ -570,25 +570,28 @@ def scheduleReboot(data,hostgroups, hostdict, starttime, interval):
     return projects
 
 def format_text_for_mail(text):
+    """Old code to make sure that the script works with Python 2 (and Python 3)"""
     if sys.version_info[0] == 3: # Python 3
         return text
     elif sys.version_info[0] == 2: # Python 2
         return text.encode("utf-8","ignore")
     else:
         print("Don't know what version of python this is")
-        exit(33)
+        sys.exit(33)
 
 
 def send_mails_to_list_of_emails(smtpclient, subject, email_address_list, mail_str):
+    """Function that actually send the emails to its recipients"""
     for email_address in email_address_list:
         msg = MIMEText(mail_str)
         msg["Subject"] = subject
         msg["To"] = email_address
-        print ("Sending email to: %s" % email_address)
+        print (f"Sending email to: {email_address}")
         smtpclient.sendmail(MAIL_FROM, email_address, msg.as_string())
-        print ("Email to %s sent successfully" % email_address)
+        print (f"Email to {email_address} sent successfully")
 
 def generate_mail_text(project_dict, template):
+    """genereate project email text from template"""
     projmail = ""
     for line in template:
         try:
@@ -608,6 +611,7 @@ def generate_mail_text(project_dict, template):
     return projmail
 
 def write_copy_of_email_to_file(project_name, project_mails, subject, projmail_str):
+    """Write the project emails to file for review"""
     emails_to = ",".join(project_mails)
     file_name = "%s/%s" %(TEMPDIR, project_name)
     print(f"Creating file '{file_name}' ...")
@@ -621,7 +625,12 @@ def write_copy_of_email_to_file(project_name, project_mails, subject, projmail_s
     emailcopy.close()
 
 def generate_and_send_emails(send_emails, subject, template, projects):
-
+    """This function does the following:
+    1. Genereate mail for each project
+    2. Write the generated mails to file
+    3. Send emails to customers if send_emails == True
+    4. Send emails to BCC id send_eamils === True and MAIL_BCC
+    """
     print(str(len(projects)) + " projects to send email to.")
     ask_for_verification = True
     print(f"Establishing a connection with mail server '{MAIL_SERVER}:25'...")
@@ -632,7 +641,7 @@ def generate_and_send_emails(send_emails, subject, template, projects):
         project_name = projects[project]["name"]
         print(f"Processing project '{project_name}'...")
         if len(project_email_address_list) == 0:
-            print("Project %s has no email recipients. PLEASE NOTE that this project will not receive any email!" % project_name)
+            print(f"Project {project_name} has no email recipients. PLEASE NOTE that this project will not receive any email!")
             continue
         projmail = generate_mail_text(projects[project], template)
         if not projmail:
@@ -652,12 +661,12 @@ def generate_and_send_emails(send_emails, subject, template, projects):
             send_mails_to_list_of_emails(smtpconn, subject, project_email_address_list, projmail_str)
 
             if MAIL_BCC:
-                print ("Really sending BCC emails to: %s" % MAIL_BCC)
+                print (f"Really sending BCC emails to: {MAIL_BCC}")
                 bcc_subject =  subject + " - " + project_name
                 bcc_message = format_text_for_mail("Mail sent to: " + ",".join(project_email_address_list) + "\n------\n\n" + projmail)
                 send_mails_to_list_of_emails(smtpconn, bcc_subject, MAIL_BCC.split(","), bcc_message)
 
-        elif notified_admin == False:
+        elif notified_admin is False:
             print("Attention!!! Not sending emails right now. Please, check the created files and when you are sure execute this same command with '--I-am-sure-that-I-want-to-send-emails' parameter.")
             notified_admin = True
     smtpconn.quit()
